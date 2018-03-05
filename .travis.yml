@@ -1,0 +1,9 @@
+language: node_js
+node_js: node
+deploy:
+  provider: heroku
+  api_key:
+    secure: SNRoV9l0vB+EckMljxgY4HtArgRbFMJchLNvQIqStnGCXoDMgpNMsPoiAePF3IKT0Zs/ZIRbTfVtG2NhrM5dyT+JQ5Ka1QNv0PThP0GLsGPG/3JyLfUu0qJFjgm61/WijtJwtQS51lnL9uWBj+CiTkWn0cI+hvyrdbhN0kR+9nm8KUM2d7JKKv42GPnguMC+jMvm23CGlwV0+VE4yB8BRi4xRK9ceezfKa1cbogXbs0XkV+htluHHUdrpUMaUJc74nde5z7Gycjm4jsOkJslg5sn9eI3j8z/B2jPmJ5uzyOVNQB8lsakAEbf1OtZX3FD9HJbx7MLpaqVojWobSGeXx0fk5KoJrBj+GKN3jfQ072yW3SDdtqGkiYjXq7Xyxlb+D3kQu5Yqk1yPD9vE66CEVNDdkQhdkZ6QCCcbmo5bOFpCC4fd/HWBQ/F3TDunC7Rhj34Am7Ock9THYY7uDwGLbvcCN5UkQMxzuZAa5gFXdg80mvAfudv+4NzieGbAZu7jLetgemq7piuDqdebyUEaFHwumqkv1JNqkT4kW3W34qJHCtM0OyOgIvpxrhNusy05I4PdkfxciD3OeikpmNsZnue1/Ari4XhP/SPeklh0+p6qzfwC0LSmDg5NFHUoBnnq5QyZFoZqjM2IeA6NII5R41UA6S5GYe0kp71v11mAYI=
+  app: ancient-everglades-53590
+  on:
+    repo: flooyd/blog-posts-api

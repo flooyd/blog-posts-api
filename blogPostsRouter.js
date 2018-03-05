@@ -11,7 +11,7 @@ const fieldChecker = (req, res, next) => {
     if (!(field in req.body)) {
       const message = `Missing \`${field}\` in request body`
       console.error(message);
-      return res.status(400).send(message);
+      return res.status(400).send('error message');
     }
   }
 
@@ -19,6 +19,7 @@ const fieldChecker = (req, res, next) => {
 };
 
 BlogPosts.create('Scary story', 'some scary story content', 'bob');
+BlogPosts.create('An eventful tale', 'Some eventful content', 'Floyd');
 
 router.get('/', (req, res) => {
   res.json(BlogPosts.get());
@@ -32,7 +33,7 @@ router.post('/', [jsonParser, fieldChecker], (req, res) => {
 router.put('/:id', [jsonParser, fieldChecker], (req, res) => {
   if(req.params.id != req.body.id) {
     const message = 'Request ID does not match Params ID';
-    console.error(message);
+    console.error('hi');
     return res.status(400).send(message);
   }
 
