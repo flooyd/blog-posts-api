@@ -1,48 +1,52 @@
+'use strict';
 const express = require('express');
 const morgan = require('morgan');
+const mongoose = require('mongoose');
 const app = express();
 const blogPostsRouter = require('./blogPostsRouter');
+const {PORT, DATABASE_URL} = require('./config');
+
+mongoose.Promise = global.Promise;
 
 app.use(morgan('common'));
-
 app.use('/blog-posts', blogPostsRouter);
 
 let server;
 
-function runServer(bIsTest) {
-  console.log(bIsTest);
-  //different port so that I can run nodemon while testing
-  let port = process.env.PORT || 8080;
-  if(bIsTest) {
-    port = process.env.PORT || 8081;
-  }
-  
+function runServer(databaseUrl, port = PORT) {
   return new Promise((resolve, reject) => {
-    server = app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
-      resolve();
-    }).on('error', err => {
-      reject(err);
-    });
-  });
+    mongoose.connect(databaseUrl, err => {
+      if (err) {
+        return reject(err);
+      }
+      server = app.listen(port, () => {
+        console.log(`Server running on ${port}`);
+        resolve();
+      })
+      .on('error', err => {
+        mongoose.disconnect();
+        reject(err);
+      })
+    })
+  })
 }
 
 function closeServer() {
-  const port = process.env.PORT || 8080;
-  return new Promise((resolve, reject) => {
-    console.log('server closed');
-    server.close(err => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve();
-    });
-  });
+  return mongoose.disconnect().then(() => {
+    return new Promise((resolve, reject) => {
+      console.log('Closing mongoose connection and server');
+      server.close(err => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      })
+    })
+  })
 }
 
 if (require.main === module) {
-  runServer(false).catch(err => console.log(err))
+  runServer(DATABASE_URL).catch(err => console.error(err))
   //.then(server => {
     // I don't really understand why the promise calls resolve with
     //server passed as a parameter. I think without doing something like this,
