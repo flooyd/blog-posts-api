@@ -1,97 +1,109 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const expect = chai.expect;
+const faker = require('faker');
+const mongoose = require('mongoose');
+
 const {
   app,
   runServer,
   closeServer
 } = require('../server');
 
+const {
+  BlogPost
+} = require('../models');
+const {
+  TEST_DATABASE_URL
+} = require('../config');
+
 chai.use(chaiHttp);
 
-describe('Blog Posts', function () {
-  before(function(){
-    return runServer(true);
-  })
+const generateBlogPost = function () {
+  return {
+    title: faker.lorem.sentence(3, 5),
+    content: faker.lorem.paragraph(5),
+    author: {
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName()
+    }
+  };
+};
 
-  after(function() {
+const seedDb = () => {
+  const seedData = [];
+
+  for (let i = 1; i < 10; i++) {
+    seedData.push(generateBlogPost());
+  }
+
+  return BlogPost.insertMany(seedData);
+}
+
+const tearDownDb = () => {
+  mongoose.connection.dropDatabase();
+  console.log('Database dropped');
+}
+
+describe('Blog Posts API', function () {
+  before(function () {
+    return runServer(TEST_DATABASE_URL, 3001);
+  });
+
+  after(function () {
     return closeServer();
-  })
+  });
 
-  it('should list blog posts on GET', function() {
-    return chai.request(app)
-    .get('/blog-posts')
-    .then(function(res){
-      expect(res).to.be.json;
-      expect(res).to.have.status(200);
-      expect(res.body).to.be.an('array');
-      expect(res.body.length).to.be.at.least(2);
+  beforeEach(function () {
+    return seedDb();
+  });
 
-      const expectedKeys = ['title', 'content', 'author', 'publishDate', 'id'];
-      res.body.forEach(blogPost => {
-        expect(blogPost).to.be.an('object');
-        expect(blogPost).to.have.keys(expectedKeys);
-      })
-      
-    })
-  })
+  afterEach(function () {
+    tearDownDb();
+  });
 
-  it('should create blog post on POST', function() {
-    let blogPost = {
-      title: 'Some neat title',
-      content: 'Some neat content',
-      author: 'Some neat author'
-    };
+  describe('GET', function () {
+    it('should list blog posts on GET', function () {
+      let res;
 
-    return chai.request(app)
-    .post('/blog-posts')
-    .send(blogPost)
-    .then(function(res) {
-      expect(res).to.be.json;
-      expect(res).to.have.status(201);
-      expect(res.body).to.be.an('object');
-
-      const expectedKeys = ['id','title', 'content', 'author', 'publishDate'];
-      expect(res.body).to.have.keys(expectedKeys);
-
-      expect(res.body).to.deep.equal(Object.assign(blogPost, {
-        id: res.body.id,
-        publishDate: res.body.publishDate
-      }));
-    })
-  })
-
-  it('should delete blog post on DELETE', function() {
-    return chai.request(app)
-    .get('/blog-posts')
-    .then(function(res){
-      const id = res.body[0].id;
       return chai.request(app)
-      .delete(`/blog-posts/${id}`);
+        .get('/blog-posts')
+        .then(function (_res) {
+          res = _res;
+          expect(res).to.have.status(200);
+          expect(res.body.blogPosts).to.have.length.of.at.least(1);
+          let x = BlogPost.count();
+
+          return BlogPost.count();
+        })
+        .then(function (count) {
+          console.log(`Count is ${count}`);
+          expect(res.body.blogPosts).to.have.lengthOf(count);
+        });
+    });
+  })
+
+
+
+  it('should create blog post on POST', function () {
+
+  })
+
+  it('should delete blog post on DELETE', function () {
+    let blogPost;
+
+    return BlogPost.findOne()
+    .then(function(_blogPost) {
+      blogPost = _blogPost;
+      return chai.request(app)
+      .delete(`/blog-posts/${blogPost.id}`);
     })
-    .then(function(res){
+    .then(function(res) {
       expect(res).to.have.status(204);
     })
   })
 
-  it('should update blog post on PUT', function() {
-    const updatedPost = {
-      title: 'updated post',
-      content: 'updated content',
-      author: 'updated author'
-    };
+  it('should update blog post on PUT', function () {
 
-    return chai.request(app)
-    .get('/blog-posts')
-    .then(function(res){
-      const id = res.body[0].id;
-      updatedPost.id = id;
-      return chai.request(app)
-      .put(`/blog-posts/${id}`)
-      .send(updatedPost);
-    })
-    .then(function(res){
-      expect(res).to.have.status(200);
-    })
   })
 })
