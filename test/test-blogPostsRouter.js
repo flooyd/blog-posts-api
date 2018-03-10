@@ -134,7 +134,7 @@ describe('Blog Posts API', function () {
     });
   });
 
-  //cool
+  //adding this to allow commit for travis
   describe('PUT', function () {
     it('should update blog post on PUT', function () {
       const fieldsToUpdate = {
