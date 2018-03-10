@@ -62,6 +62,7 @@ describe('Blog Posts API', function () {
     tearDownDb();
   });
 
+
   describe('GET', function () {
     it('should list blog posts on GET', function () {
       let res;
@@ -77,33 +78,86 @@ describe('Blog Posts API', function () {
           return BlogPost.count();
         })
         .then(function (count) {
-          console.log(`Count is ${count}`);
           expect(res.body.blogPosts).to.have.lengthOf(count);
         });
     });
-  })
+  });
 
 
+  describe('POST', function () {
+    it('should create blog post on POST', function () {
+      const blogPost = generateBlogPost();
 
-  it('should create blog post on POST', function () {
-
-  })
-
-  it('should delete blog post on DELETE', function () {
-    let blogPost;
-
-    return BlogPost.findOne()
-    .then(function(_blogPost) {
-      blogPost = _blogPost;
       return chai.request(app)
-      .delete(`/blog-posts/${blogPost.id}`);
-    })
-    .then(function(res) {
-      expect(res).to.have.status(204);
-    })
-  })
+        .post('/blog-posts')
+        .send(blogPost)
+        .then(function (res) {
+          expect(res).to.be.json;
+          expect(res).to.have.status(201);
+          expect(res.body).to.be.an('object');
+          expect(res.body.id).to.not.be.null;
 
-  it('should update blog post on PUT', function () {
+          expect(res.body).to.have.keys(
+            'title', 'content', 'author', 'created', 'id');
 
-  })
-})
+          Object.keys(blogPost).forEach(function (key) {
+            if (key === 'author') {
+              expect(res.body[key]).to.equal(
+                `${blogPost[key].firstName} ${blogPost[key].lastName}`)
+            } else {
+              expect(res.body[key]).to.equal(blogPost[key]);
+            }
+          });
+
+          return BlogPost.findById(res.body.id);
+        })
+        .then(function (_blogPost) {
+          expect(_blogPost.title).to.equal(blogPost.title);
+          //etc etc (I'll test for real in project...:D)
+        });
+    });
+  });
+
+  describe('DELETE', function () {
+    it('should delete blog post on DELETE', function () {
+      let blogPost;
+
+      return BlogPost.findOne()
+        .then(function (_blogPost) {
+          blogPost = _blogPost;
+          return chai.request(app)
+            .delete(`/blog-posts/${blogPost.id}`);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(204);
+        });
+    });
+  });
+
+  //cool
+  describe('PUT', function () {
+    it('should update blog post on PUT', function () {
+      const fieldsToUpdate = {
+        title: "new title"
+      };
+
+      return BlogPost
+        .findOne()
+        .then(function (blogPost) {
+          fieldsToUpdate.id = blogPost.id;
+
+          return chai.request(app)
+            .put(`/blog-posts/${fieldsToUpdate.id}`)
+            .send(fieldsToUpdate);
+        })
+        .then(function (res) {
+          expect(res).to.have.status(200);
+
+          return BlogPost.findById(fieldsToUpdate.id)
+        })
+        .then(function (blogPost) {
+          expect(blogPost.title).to.equal(fieldsToUpdate.title);
+        });
+    });
+  });
+});

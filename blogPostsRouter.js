@@ -22,7 +22,8 @@ const fieldChecker = (req, res, next) => {
 };
 
 const authorChecker = (req, res, next) => {
-  if(!req.body.author.firstName || !req.body.author.lastName) {
+  if(req.body.author && 
+    (!req.body.author.firstName || !req.body.author.lastName)) {
     res.status(400).json({
       badRequest: 'Missing author.firstName or author.lastName'
     });
@@ -76,7 +77,7 @@ router.post('/', [jsonParser, fieldChecker, authorChecker], (req, res) => {
   });
 });
 
-router.put('/:id', [jsonParser, fieldChecker, authorChecker], (req, res) => {
+router.put('/:id', [jsonParser, authorChecker], (req, res) => {
   if(req.body.id !== req.params.id) {
     return res.status(400).json({
       badRequest: 'body id and param id do not match'
